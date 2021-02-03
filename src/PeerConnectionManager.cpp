@@ -301,6 +301,26 @@ PeerConnectionManager::PeerConnectionManager(const std::list<std::string> &iceSe
 		}
 		return answer;
 	};
+	m_func["/api/reloadConfigFile"] = [this](const struct mg_request_info *req_ifo, const Json::Value &in) -> Json::Value {
+		m_config = this->reloadConfig()["urls"];
+		return m_config;
+  	};
+	m_func["/api/addCamera"] = [this](const struct mg_request_info *req_info, const Json::Value &in) -> Json::Value {
+		std::string cameraname;
+		std::string url;
+		std::string audiourl;
+		std::string options;
+		if (req_info->query_string)
+		{
+			CivetServer::getParam(req_info->query_string, "cameraname", cameraname);
+			CivetServer::getParam(req_info->query_string, "url", url);
+			CivetServer::getParam(req_info->query_string, "audiourl", audiourl);
+			CivetServer::getParam(req_info->query_string, "options", options);
+		}
+		this->resetConfig(cameraname, url, audiourl, options);
+		m_config = this->reloadConfig()["urls"];
+		return m_config;
+	};
 }
 
 /* ---------------------------------------------------------------------------
@@ -309,6 +329,38 @@ PeerConnectionManager::PeerConnectionManager(const std::list<std::string> &iceSe
 PeerConnectionManager::~PeerConnectionManager()
 {
 }
+
+/* ---------------------------------------------------------------------------
+**  reload config.json
+** -------------------------------------------------------------------------*/
+
+const Json::Value PeerConnectionManager::reloadConfig()
+{
+	std::ifstream stream("config.json");
+	Json::Value config;
+	stream >> config;
+	return config;
+};
+
+const Json::Value PeerConnectionManager::resetConfig(const std::string &cameraname, const std::string &videourl, const std::string &audiourl, const std::string &options)
+{
+	std::ifstream stream("config.json");
+	Json::Value config;
+	stream >> config;
+	Json::Value second;
+	second["video"] = Json::Value(videourl);
+	second["audio"] = Json::Value(audiourl);
+	second["options"] = Json::Value(options);
+	config["urls"][cameraname] = second;
+	Json::StyledWriter sw;
+	std::ofstream os;
+	os.open("config.json", std::ios::out);
+	if (!os.is_open())
+		std::cout << "error can not find or create the file which name \" config.json \"." << std::endl;
+	os << sw.write(config);
+	os.close();
+	return config;
+};
 
 /* ---------------------------------------------------------------------------
 **  return deviceList as JSON vector
