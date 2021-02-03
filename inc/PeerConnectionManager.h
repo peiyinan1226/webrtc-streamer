@@ -277,6 +277,8 @@ class PeerConnectionManager {
 		const Json::Value getStreamList();
 		const Json::Value createOffer(const std::string &peerid, const std::string & videourl, const std::string & audiourl, const std::string & options);
 		const Json::Value setAnswer(const std::string &peerid, const Json::Value& jmessage);
+		const Json::Value resetConfig(const std::string & cameraname, const std::string & videourl, const std::string & audiourl, const std::string & options);
+  		const Json::Value reloadConfig();
 
 
 	protected:
@@ -300,7 +302,7 @@ class PeerConnectionManager {
 		std::map<std::string, AudioVideoPair>                                     m_stream_map;
 		std::mutex                                                                m_streamMapMutex;
 		std::list<std::string>                                                    m_iceServerList;
-		const Json::Value                                                         m_config;
+		Json::Value                                                         m_config;
 		std::map<std::string,std::string>                                         m_videoaudiomap;
 		const std::regex                                                          m_publishFilter;
 		std::map<std::string,HttpServerRequestHandler::httpFunction>              m_func;
